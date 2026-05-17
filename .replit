@@ -30,3 +30,14 @@ externalPort = 80
 [[ports]]
 localPort = 19514
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = "587"
+SMTP_SECURE = "false"
+SMTP_USER = "dg770205166@gmail.com"
+SMTP_FROM = "dg770205166@gmail.com"
+NOTIFY_EMAIL = "dg770205166@gmail.com"
+WHATSAPP_TO = "+966578032336"

@@ -1,11 +1,13 @@
 import nodemailer from "nodemailer";
+import twilio from "twilio";
 import { logger } from "./logger";
 
-const NOTIFY_EMAIL = "170610009@su.edu.ye";
-const FROM_EMAIL = process.env["SMTP_FROM"] || "noreply@rspf.sa";
+const NOTIFY_EMAIL = process.env["NOTIFY_EMAIL"] || "dg770205166@gmail.com";
+const FROM_EMAIL = process.env["SMTP_FROM"] || "dg770205166@gmail.com";
+const WHATSAPP_TO = process.env["WHATSAPP_TO"] || "+966578032336";
 
 function createTransport() {
-  if (process.env["SMTP_HOST"]) {
+  if (process.env["SMTP_HOST"] && process.env["SMTP_PASS"]) {
     return nodemailer.createTransport({
       host: process.env["SMTP_HOST"],
       port: Number(process.env["SMTP_PORT"] || 587),
@@ -19,6 +21,37 @@ function createTransport() {
   return null;
 }
 
+function createTwilioClient() {
+  const sid = process.env["TWILIO_ACCOUNT_SID"];
+  const token = process.env["TWILIO_AUTH_TOKEN"];
+  if (sid && token) {
+    return twilio(sid, token);
+  }
+  return null;
+}
+
+export async function sendWhatsAppNotification(message: string) {
+  const client = createTwilioClient();
+  if (!client) {
+    logger.info("Twilio not configured — skipping WhatsApp notification");
+    return;
+  }
+
+  const twilioFrom = process.env["TWILIO_WHATSAPP_FROM"] || "whatsapp:+14155238886";
+  const to = `whatsapp:${WHATSAPP_TO}`;
+
+  try {
+    await client.messages.create({
+      from: twilioFrom,
+      to,
+      body: message,
+    });
+    logger.info({ to: WHATSAPP_TO }, "WhatsApp notification sent");
+  } catch (err) {
+    logger.warn({ err }, "Failed to send WhatsApp notification");
+  }
+}
+
 export async function sendRegistrationEmail(data: {
   fullName: string;
   specialization: string;
@@ -30,6 +63,19 @@ export async function sendRegistrationEmail(data: {
   orcid: string;
   researchTitle: string;
 }) {
+  const waMessage =
+    `🔬 *تسجيل جديد — RSPF*\n\n` +
+    `👤 *الاسم:* ${data.fullName}\n` +
+    `🎓 *التخصص:* ${data.specialization}\n` +
+    `📧 *البريد:* ${data.email}\n` +
+    `📱 *واتساب:* ${data.whatsapp}\n` +
+    `🏥 *الجهة:* ${data.affiliation}\n` +
+    `🌍 *الدولة/المدينة:* ${data.country} — ${data.city || "—"}\n` +
+    `🔗 *ORCID:* ${data.orcid || "—"}\n` +
+    `📄 *الفرصة البحثية:* ${data.researchTitle}`;
+
+  sendWhatsAppNotification(waMessage).catch(() => {});
+
   const transport = createTransport();
   if (!transport) {
     logger.info("SMTP not configured — skipping email notification");
@@ -80,6 +126,17 @@ export async function sendServiceRequestEmail(data: {
   details: string;
   fileLink: string;
 }) {
+  const waMessage =
+    `📤 *طلب خدمة جديد — RSPF*\n\n` +
+    `👤 *الاسم:* ${data.fullName}\n` +
+    `📱 *الجوال:* ${data.phone}\n` +
+    `📧 *البريد:* ${data.email}\n` +
+    `🛠️ *نوع الخدمة:* ${data.serviceType}\n` +
+    `📝 *التفاصيل:* ${data.details}\n` +
+    `🔗 *رابط الملفات:* ${data.fileLink || "—"}`;
+
+  sendWhatsAppNotification(waMessage).catch(() => {});
+
   const transport = createTransport();
   if (!transport) {
     logger.info("SMTP not configured — skipping service request email");
