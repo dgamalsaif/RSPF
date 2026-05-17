@@ -12,6 +12,7 @@ export interface ResearchOpportunity {
   benefits: string[];
   duration: string;
   supervisor: string;
+  imageUrl?: string;
   createdAt: string;
 }
 
@@ -35,6 +36,7 @@ const DEFAULT_RESEARCH: ResearchOpportunity[] = [
     ],
     duration: "8 أشهر",
     supervisor: "د. محمد العمري — استشاري طب طوارئ",
+    imageUrl: "",
     createdAt: "2026-04-01",
   },
   {
@@ -56,6 +58,7 @@ const DEFAULT_RESEARCH: ResearchOpportunity[] = [
     ],
     duration: "10 أشهر",
     supervisor: "د. سارة القحطاني — استشارية جراحة تجميل",
+    imageUrl: "",
     createdAt: "2026-04-05",
   },
   {
@@ -77,6 +80,7 @@ const DEFAULT_RESEARCH: ResearchOpportunity[] = [
     ],
     duration: "9 أشهر",
     supervisor: "د. خالد الزهراني — استشاري طب الأسنان التحفظي",
+    imageUrl: "",
     createdAt: "2026-04-10",
   },
   {
@@ -98,6 +102,7 @@ const DEFAULT_RESEARCH: ResearchOpportunity[] = [
     ],
     duration: "8 أشهر",
     supervisor: "د. نورة الدوسري — استشارية أسنان أطفال",
+    imageUrl: "",
     createdAt: "2026-04-15",
   },
   {
@@ -119,6 +124,7 @@ const DEFAULT_RESEARCH: ResearchOpportunity[] = [
     ],
     duration: "12 أشهر",
     supervisor: "د. عبدالرحمن الغامدي — استشاري جراحة القلب والصدر",
+    imageUrl: "",
     createdAt: "2026-04-20",
   },
   {
@@ -140,11 +146,12 @@ const DEFAULT_RESEARCH: ResearchOpportunity[] = [
     ],
     duration: "10 أشهر",
     supervisor: "د. فيصل العسيري — استشاري الأشعة التداخلية",
+    imageUrl: "",
     createdAt: "2026-04-25",
   },
 ];
 
-const STORAGE_KEY = "rspf_research_opportunities";
+const STORAGE_KEY = "rspf_research_opportunities_v2";
 
 export function getResearchOpportunities(): ResearchOpportunity[] {
   try {
@@ -179,5 +186,9 @@ export const SPECIALTY_COLORS: Record<string, string> = {
   Neurology: "bg-cyan-100 text-cyan-700",
   Dermatology: "bg-rose-100 text-rose-700",
   Ophthalmology: "bg-lime-100 text-lime-700",
+  Psychiatry: "bg-violet-100 text-violet-700",
+  Pediatrics: "bg-sky-100 text-sky-700",
+  Obstetrics: "bg-fuchsia-100 text-fuchsia-700",
+  Oncology: "bg-amber-100 text-amber-700",
   Other: "bg-gray-100 text-gray-700",
 };
