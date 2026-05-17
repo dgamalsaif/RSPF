@@ -1,32 +1,50 @@
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import FloatingButtons from "@/components/FloatingButtons";
+import Home from "@/pages/Home";
+import ParticipantPortal from "@/pages/ParticipantPortal";
+import CoordinatorPortal from "@/pages/CoordinatorPortal";
+import SpecialRequests from "@/pages/SpecialRequests";
+import KnowledgeCenter from "@/pages/KnowledgeCenter";
+import About from "@/pages/About";
+import FAQ from "@/pages/FAQ";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
 
-function Home() {
+function Router() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Replit Agent is building...</h1>
-        <p className="mt-2 text-sm text-gray-600">Your app will appear here once it's ready.</p>
-      </div>
+    <div className="flex flex-col min-h-screen" style={{ fontFamily: "'Tajawal', sans-serif" }}>
+      <Navbar />
+      <main className="flex-1">
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/participant-portal" component={ParticipantPortal} />
+          <Route path="/coordinator-portal" component={CoordinatorPortal} />
+          <Route path="/special-requests" component={SpecialRequests} />
+          <Route path="/knowledge-center" component={KnowledgeCenter} />
+          <Route path="/about" component={About} />
+          <Route path="/faq" component={FAQ} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+      <Footer />
+      <FloatingButtons />
     </div>
   );
 }
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
 function App() {
+  useEffect(() => {
+    document.documentElement.dir = "rtl";
+    document.documentElement.lang = "ar";
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
