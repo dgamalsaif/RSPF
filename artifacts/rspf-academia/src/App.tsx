@@ -3,6 +3,7 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingButtons from "@/components/FloatingButtons";
@@ -30,14 +31,12 @@ function Router() {
       setCoordinatorLoggedIn(!!session);
     };
     check();
-    // Poll every second to detect login/logout
     const interval = setInterval(check, 1000);
     return () => clearInterval(interval);
   }, []);
 
   const isAdmin = location === "/admin" || location === "/admin/submissions";
   const isCoordinatorDashboard = location === "/coordinator-portal" && coordinatorLoggedIn;
-
   const hideShell = isAdmin || isCoordinatorDashboard;
 
   return (
@@ -65,20 +64,17 @@ function Router() {
 }
 
 function App() {
-  useEffect(() => {
-    document.documentElement.dir = "rtl";
-    document.documentElement.lang = "ar";
-  }, []);
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <LanguageProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </LanguageProvider>
   );
 }
 

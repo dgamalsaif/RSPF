@@ -8,6 +8,7 @@ interface Registration {
   id: number;
   fullName: string;
   specialization: string;
+  academicDegree: string;
   email: string;
   whatsapp: string;
   affiliation: string;
@@ -295,7 +296,10 @@ export default function AdminSubmissions() {
                       <tr key={reg.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-4">
                           <p className="font-semibold text-slate-800 text-sm">{reg.fullName}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">{reg.specialization}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{reg.specialization}</p>
+                          {reg.academicDegree && (
+                            <span className="inline-block mt-1 text-xs bg-[#0C3156]/10 text-[#0C3156] px-2 py-0.5 rounded-full font-medium">{reg.academicDegree}</span>
+                          )}
                           {reg.orcid && <p className="text-xs text-blue-400 mt-0.5" dir="ltr">ORCID: {reg.orcid}</p>}
                         </td>
                         <td className="px-4 py-4">

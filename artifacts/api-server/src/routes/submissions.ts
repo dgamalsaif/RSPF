@@ -18,6 +18,7 @@ router.post("/registrations", async (req, res) => {
   sendRegistrationEmail({
     fullName: parsed.data.fullName,
     specialization: parsed.data.specialization,
+    academicDegree: parsed.data.academicDegree ?? "",
     email: parsed.data.email,
     whatsapp: parsed.data.whatsapp,
     affiliation: parsed.data.affiliation,

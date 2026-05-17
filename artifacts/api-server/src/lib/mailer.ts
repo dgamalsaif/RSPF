@@ -55,6 +55,7 @@ export async function sendWhatsAppNotification(message: string) {
 export async function sendRegistrationEmail(data: {
   fullName: string;
   specialization: string;
+  academicDegree: string;
   email: string;
   whatsapp: string;
   affiliation: string;
@@ -67,6 +68,7 @@ export async function sendRegistrationEmail(data: {
     `🔬 *تسجيل جديد — RSPF*\n\n` +
     `👤 *الاسم:* ${data.fullName}\n` +
     `🎓 *التخصص:* ${data.specialization}\n` +
+    `🏅 *الدرجة الأكاديمية:* ${data.academicDegree || "—"}\n` +
     `📧 *البريد:* ${data.email}\n` +
     `📱 *واتساب:* ${data.whatsapp}\n` +
     `🏥 *الجهة:* ${data.affiliation}\n` +
@@ -91,7 +93,8 @@ export async function sendRegistrationEmail(data: {
         <table style="width:100%; border-collapse:collapse;">
           <tr><td style="padding:8px; font-weight:bold; color:#0C3156;">الاسم الكامل:</td><td style="padding:8px;">${data.fullName}</td></tr>
           <tr style="background:#fff;"><td style="padding:8px; font-weight:bold; color:#0C3156;">التخصص:</td><td style="padding:8px;">${data.specialization}</td></tr>
-          <tr><td style="padding:8px; font-weight:bold; color:#0C3156;">البريد الإلكتروني:</td><td style="padding:8px;">${data.email}</td></tr>
+          <tr><td style="padding:8px; font-weight:bold; color:#0C3156;">الدرجة الأكاديمية:</td><td style="padding:8px;">${data.academicDegree || "—"}</td></tr>
+          <tr style="background:#fff;"><td style="padding:8px; font-weight:bold; color:#0C3156;">البريد الإلكتروني:</td><td style="padding:8px;">${data.email}</td></tr>
           <tr style="background:#fff;"><td style="padding:8px; font-weight:bold; color:#0C3156;">واتساب:</td><td style="padding:8px;">${data.whatsapp}</td></tr>
           <tr><td style="padding:8px; font-weight:bold; color:#0C3156;">جهة الانتساب:</td><td style="padding:8px;">${data.affiliation}</td></tr>
           <tr style="background:#fff;"><td style="padding:8px; font-weight:bold; color:#0C3156;">الدولة / المدينة:</td><td style="padding:8px;">${data.country} — ${data.city || "—"}</td></tr>

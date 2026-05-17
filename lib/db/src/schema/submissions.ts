@@ -6,6 +6,7 @@ export const registrationsTable = pgTable("registrations", {
   id: serial("id").primaryKey(),
   fullName: text("full_name").notNull(),
   specialization: text("specialization").notNull(),
+  academicDegree: text("academic_degree").notNull().default(""),
   email: text("email").notNull(),
   whatsapp: text("whatsapp").notNull(),
   affiliation: text("affiliation").notNull(),
