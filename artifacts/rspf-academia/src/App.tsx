@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,14 +13,19 @@ import SpecialRequests from "@/pages/SpecialRequests";
 import KnowledgeCenter from "@/pages/KnowledgeCenter";
 import About from "@/pages/About";
 import FAQ from "@/pages/FAQ";
+import AdminDashboard from "@/pages/AdminDashboard";
+import ResearchDetail from "@/pages/ResearchDetail";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
 
 function Router() {
+  const [location] = useLocation();
+  const isAdmin = location === "/admin";
+
   return (
     <div className="flex flex-col min-h-screen" style={{ fontFamily: "'Tajawal', sans-serif" }}>
-      <Navbar />
+      {!isAdmin && <Navbar />}
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
@@ -30,11 +35,13 @@ function Router() {
           <Route path="/knowledge-center" component={KnowledgeCenter} />
           <Route path="/about" component={About} />
           <Route path="/faq" component={FAQ} />
+          <Route path="/admin" component={AdminDashboard} />
+          <Route path="/research/:id" component={ResearchDetail} />
           <Route component={NotFound} />
         </Switch>
       </main>
-      <Footer />
-      <FloatingButtons />
+      {!isAdmin && <Footer />}
+      {!isAdmin && <FloatingButtons />}
     </div>
   );
 }

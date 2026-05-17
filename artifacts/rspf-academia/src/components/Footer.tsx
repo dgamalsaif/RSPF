@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Stethoscope, Mail, Phone, Send } from "lucide-react";
+import { Microscope, Mail, Phone, Send } from "lucide-react";
 
 const quickLinks = [
   { href: "/", label: "الرئيسية" },
@@ -13,52 +13,64 @@ const quickLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1B5E37] text-white">
+    <footer className="bg-[#0C3156] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {/* Contact */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-[#D4A22A]">تواصل معنا</h3>
+            <h3 className="text-lg font-bold mb-5 text-[#E9A020]">تواصل معنا</h3>
             <div className="space-y-3">
               <a
                 href="mailto:info@rspf.sa"
                 data-testid="link-footer-email"
-                className="flex items-center gap-2 text-green-100 hover:text-white text-sm"
+                className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors"
               >
                 <Mail size={15} />
                 info@rspf.sa
               </a>
               <a
-                href="tel:+966598409805"
-                data-testid="link-footer-phone"
-                className="flex items-center gap-2 text-green-100 hover:text-white text-sm"
-              >
-                <Phone size={15} />
-                +966 59 840 9805
-              </a>
-              <a
-                href="https://t.me/rspf_sa"
+                href="https://wa.me/966578032336"
                 target="_blank"
                 rel="noopener noreferrer"
-                data-testid="link-footer-telegram"
-                className="flex items-center gap-2 text-green-100 hover:text-white text-sm"
+                data-testid="link-footer-phone"
+                className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors"
+              >
+                <Phone size={15} />
+                +966 57 803 2336
+              </a>
+              <a
+                href="https://t.me/RSPF_Services"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="link-footer-telegram-supervisor"
+                className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors"
               >
                 <Send size={15} />
-                @rspf_sa
+                @RSPF_Services (المشرف)
+              </a>
+              <a
+                href="https://t.me/rspf_Research"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="link-footer-telegram-channel"
+                className="flex items-center gap-2 text-blue-200 hover:text-white text-sm transition-colors"
+              >
+                <Send size={15} />
+                قناة Telegram
               </a>
             </div>
           </div>
 
           {/* Quick links */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-[#D4A22A]">روابط سريعة</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-bold mb-5 text-[#E9A020]">روابط سريعة</h3>
+            <ul className="space-y-2.5">
               {quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
                     data-testid={`link-footer-${link.href.replace("/", "") || "home"}`}
-                    className="text-green-100 hover:text-white text-sm transition-colors"
+                    className="text-blue-200 hover:text-white text-sm transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -68,38 +80,39 @@ export default function Footer() {
           </div>
 
           {/* Logo & tagline */}
-          <div className="flex flex-col items-end gap-4">
+          <div className="flex flex-col items-end gap-5">
             <div className="flex items-center gap-2">
               <div className="flex flex-col items-end">
-                <div className="flex items-center gap-1">
-                  <span className="text-xs bg-[#D4A22A] text-white px-1.5 py-0.5 rounded font-bold">2026</span>
-                  <span className="text-2xl font-black text-white">RSPF</span>
-                  <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
-                    <Stethoscope size={18} className="text-white" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs bg-[#E9A020] text-white px-1.5 py-0.5 rounded font-bold tracking-wide">2026</span>
+                  <span className="text-2xl font-black text-white tracking-tight">RSPF</span>
+                  <div className="w-9 h-9 bg-white/15 border border-white/20 rounded-full flex items-center justify-center">
+                    <Microscope size={18} className="text-white" />
                   </div>
                 </div>
               </div>
             </div>
-            <p className="text-green-100 text-sm text-right leading-relaxed">
-              وجهتك الأولى في التدريب الصحي والبحث العلمي حيث الجودة والاحترافية واختيار أفضل الأسعار للمتدربين
+            <p className="text-blue-200 text-sm text-right leading-relaxed">
+              المنصة الأكاديمية الأولى في المملكة للبحث العلمي الطبي — نرافقك من الفكرة حتى النشر في أرقى المجلات الدولية
             </p>
             <a
-              href="https://t.me/rspf_sa"
+              href="https://t.me/rspf_Research"
               target="_blank"
               rel="noopener noreferrer"
-              data-testid="button-footer-telegram"
-              className="flex items-center gap-2 border border-white/40 text-white px-4 py-2 rounded-full text-sm hover:bg-white/10 transition-colors"
+              data-testid="button-footer-telegram-channel"
+              className="flex items-center gap-2 border border-[#E9A020]/60 text-[#E9A020] px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#E9A020]/10 transition-colors"
             >
               <Send size={14} />
-              اشترك في قناتنا
+              اشترك في قناة Telegram
             </a>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center">
-          <p className="text-green-200 text-sm">© RSPF 2026. جميع الحقوق محفوظة.</p>
+      <div className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between flex-wrap gap-2">
+          <p className="text-blue-300 text-xs">© RSPF 2026. جميع الحقوق محفوظة.</p>
+          <p className="text-blue-300 text-xs">Research Scientific Publications Forum</p>
         </div>
       </div>
     </footer>
