@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "wouter";
-import { ChevronLeft, LogOut, RefreshCw, Users, FileText, Check, X, Clock, Mail, Phone } from "lucide-react";
+import { ChevronLeft, LogOut, RefreshCw, Users, FileText, Check, X, Clock, Mail, Phone, Globe, Flag } from "lucide-react";
 
 const API_BASE = "/api";
 
@@ -33,18 +33,48 @@ interface ServiceRequest {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-700",
-  approved: "bg-emerald-100 text-emerald-700",
-  rejected: "bg-red-100 text-red-600",
+  pending:   "bg-yellow-100 text-yellow-700",
+  approved:  "bg-emerald-100 text-emerald-700",
+  rejected:  "bg-red-100 text-red-600",
   contacted: "bg-blue-100 text-blue-700",
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: "قيد المراجعة",
-  approved: "مقبول",
-  rejected: "مرفوض",
+  pending:   "قيد المراجعة",
+  approved:  "مقبول",
+  rejected:  "مرفوض",
   contacted: "تم التواصل",
 };
+
+const COUNTRY_FLAGS: Record<string, string> = {
+  "المملكة العربية السعودية": "🇸🇦",
+  "البحرين":                  "🇧🇭",
+  "قطر":                      "🇶🇦",
+  "عُمان":                    "🇴🇲",
+  "الكويت":                   "🇰🇼",
+  "الإمارات":                 "🇦🇪",
+  "الأردن":                   "🇯🇴",
+  "مصر":                      "🇪🇬",
+  "السودان":                  "🇸🇩",
+  "اليمن":                    "🇾🇪",
+  "العراق":                   "🇮🇶",
+  "سوريا":                    "🇸🇾",
+  "لبنان":                    "🇱🇧",
+  "ليبيا":                    "🇱🇾",
+  "تونس":                     "🇹🇳",
+  "الجزائر":                  "🇩🇿",
+  "المغرب":                   "🇲🇦",
+  "موريتانيا":                "🇲🇷",
+  "الصومال":                  "🇸🇴",
+};
+
+function getFlag(country: string) {
+  return COUNTRY_FLAGS[country] ?? "🌍";
+}
+
+function isSaudi(country: string) {
+  return country === "المملكة العربية السعودية";
+}
 
 function StatusBadge({ status }: { status: string }) {
   return (
@@ -94,6 +124,7 @@ function StatusActions({ id, current, onUpdate, endpoint }: { id: number; curren
 
 export default function AdminSubmissions() {
   const [tab, setTab] = useState<"registrations" | "services">("registrations");
+  const [countryFilter, setCountryFilter] = useState<"all" | "saudi" | "non-saudi">("all");
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [services, setServices] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -118,10 +149,19 @@ export default function AdminSubmissions() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
+  const saudiCount    = registrations.filter((r) => isSaudi(r.country)).length;
+  const nonSaudiCount = registrations.filter((r) => !isSaudi(r.country)).length;
+
+  const filteredRegistrations = registrations.filter((r) => {
+    if (countryFilter === "saudi")     return isSaudi(r.country);
+    if (countryFilter === "non-saudi") return !isSaudi(r.country);
+    return true;
+  });
+
   const stats = {
-    totalReg: registrations.length,
+    totalReg:   registrations.length,
     pendingReg: registrations.filter((r) => r.status === "pending").length,
-    totalSvc: services.length,
+    totalSvc:   services.length,
     pendingSvc: services.filter((s) => s.status === "pending").length,
   };
 
@@ -155,12 +195,12 @@ export default function AdminSubmissions() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* STATS */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           {[
-            { label: "إجمالي التسجيلات", value: stats.totalReg, icon: <Users size={20} className="text-[#0C3156]" />, bg: "bg-blue-50", pending: stats.pendingReg },
-            { label: "بانتظار المراجعة", value: stats.pendingReg, icon: <Clock size={20} className="text-yellow-500" />, bg: "bg-yellow-50", pending: null },
-            { label: "طلبات الخدمات", value: stats.totalSvc, icon: <FileText size={20} className="text-purple-500" />, bg: "bg-purple-50", pending: stats.pendingSvc },
-            { label: "خدمات بانتظار الرد", value: stats.pendingSvc, icon: <Clock size={20} className="text-orange-500" />, bg: "bg-orange-50", pending: null },
+            { label: "إجمالي التسجيلات",    value: stats.totalReg,   icon: <Users size={20} className="text-[#0C3156]" />,       bg: "bg-blue-50" },
+            { label: "بانتظار المراجعة",    value: stats.pendingReg, icon: <Clock size={20} className="text-yellow-500" />,      bg: "bg-yellow-50" },
+            { label: "طلبات الخدمات",        value: stats.totalSvc,   icon: <FileText size={20} className="text-purple-500" />,  bg: "bg-purple-50" },
+            { label: "خدمات بانتظار الرد",   value: stats.pendingSvc, icon: <Clock size={20} className="text-orange-500" />,     bg: "bg-orange-50" },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm text-right">
               <div className={`w-10 h-10 ${s.bg} rounded-xl flex items-center justify-center mb-3`}>{s.icon}</div>
@@ -170,8 +210,26 @@ export default function AdminSubmissions() {
           ))}
         </div>
 
+        {/* NATIONALITY BREAKDOWN CARDS */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm text-right flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">🇸🇦</div>
+            <div>
+              <div className="text-3xl font-black text-slate-900">{saudiCount}</div>
+              <div className="text-sm text-slate-500">عملاء سعوديون</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm text-right flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">🌍</div>
+            <div>
+              <div className="text-3xl font-black text-slate-900">{nonSaudiCount}</div>
+              <div className="text-sm text-slate-500">عملاء غير سعوديين</div>
+            </div>
+          </div>
+        </div>
+
         {/* TABS + REFRESH */}
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <button onClick={fetchData} disabled={loading}
             className="flex items-center gap-2 text-slate-500 hover:text-[#0C3156] text-sm font-medium transition-colors">
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
@@ -189,27 +247,51 @@ export default function AdminSubmissions() {
           </div>
         </div>
 
+        {/* COUNTRY FILTER (only for registrations) */}
+        {tab === "registrations" && (
+          <div className="flex items-center gap-2 mb-4 justify-end flex-wrap">
+            <span className="text-xs text-slate-400 font-medium">تصفية حسب الجنسية:</span>
+            {[
+              { key: "all",       label: "الكل",              icon: <Users size={13} /> },
+              { key: "saudi",     label: `🇸🇦 سعوديون (${saudiCount})`,    icon: null },
+              { key: "non-saudi", label: `🌍 غير سعوديين (${nonSaudiCount})`, icon: null },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setCountryFilter(key as typeof countryFilter)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  countryFilter === key
+                    ? "bg-[#0C3156] text-white border-[#0C3156]"
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* REGISTRATIONS TABLE */}
         {tab === "registrations" && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            {registrations.length === 0 ? (
+            {filteredRegistrations.length === 0 ? (
               <div className="py-16 text-center text-slate-400">
                 <Users size={40} className="mx-auto mb-3 opacity-30" />
-                <p className="font-medium">لا توجد تسجيلات بعد</p>
-                <p className="text-sm mt-1">ستظهر هنا بعد تسجيل أول مشارك</p>
+                <p className="font-medium">لا توجد تسجيلات في هذا التصنيف</p>
+                <p className="text-sm mt-1">جرّب تغيير فلتر الجنسية</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-right">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
-                      {["الاسم والتخصص", "التواصل", "الجهة / المدينة", "الفرصة البحثية", "الحالة", "التاريخ", "إجراء"].map((h) => (
+                      {["الاسم والتخصص", "التواصل", "الجهة / الدولة", "الفرصة البحثية", "الحالة", "التاريخ", "إجراء"].map((h) => (
                         <th key={h} className="px-4 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {registrations.map((reg) => (
+                    {filteredRegistrations.map((reg) => (
                       <tr key={reg.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-4">
                           <p className="font-semibold text-slate-800 text-sm">{reg.fullName}</p>
@@ -227,7 +309,10 @@ export default function AdminSubmissions() {
                         </td>
                         <td className="px-4 py-4">
                           <p className="text-sm text-slate-700">{reg.affiliation}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">{reg.country}{reg.city ? ` — ${reg.city}` : ""}</p>
+                          <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                            <span>{getFlag(reg.country)}</span>
+                            <span>{reg.country}{reg.city ? ` — ${reg.city}` : ""}</span>
+                          </p>
                         </td>
                         <td className="px-4 py-4">
                           <p className="text-xs text-slate-600 line-clamp-2 max-w-[200px]">{reg.researchTitle}</p>
@@ -250,7 +335,7 @@ export default function AdminSubmissions() {
             )}
             {registrations.length > 0 && (
               <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 text-xs text-slate-500 text-right">
-                {registrations.length} تسجيل إجمالاً — {stats.pendingReg} بانتظار المراجعة
+                يعرض {filteredRegistrations.length} من {registrations.length} تسجيل — {stats.pendingReg} بانتظار المراجعة
               </div>
             )}
           </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, CheckCircle2, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -10,12 +11,37 @@ interface RegistrationModalProps {
 
 const API_BASE = "/api";
 
+const COUNTRIES = [
+  { name: "المملكة العربية السعودية", code: "+966", flag: "🇸🇦" },
+  { name: "البحرين",                  code: "+973", flag: "🇧🇭" },
+  { name: "قطر",                      code: "+974", flag: "🇶🇦" },
+  { name: "عُمان",                    code: "+968", flag: "🇴🇲" },
+  { name: "الكويت",                   code: "+965", flag: "🇰🇼" },
+  { name: "الإمارات",                 code: "+971", flag: "🇦🇪" },
+  { name: "الأردن",                   code: "+962", flag: "🇯🇴" },
+  { name: "مصر",                      code: "+20",  flag: "🇪🇬" },
+  { name: "السودان",                  code: "+249", flag: "🇸🇩" },
+  { name: "اليمن",                    code: "+967", flag: "🇾🇪" },
+  { name: "العراق",                   code: "+964", flag: "🇮🇶" },
+  { name: "سوريا",                    code: "+963", flag: "🇸🇾" },
+  { name: "لبنان",                    code: "+961", flag: "🇱🇧" },
+  { name: "ليبيا",                    code: "+218", flag: "🇱🇾" },
+  { name: "تونس",                     code: "+216", flag: "🇹🇳" },
+  { name: "الجزائر",                  code: "+213", flag: "🇩🇿" },
+  { name: "المغرب",                   code: "+212", flag: "🇲🇦" },
+  { name: "موريتانيا",                code: "+222", flag: "🇲🇷" },
+  { name: "الصومال",                  code: "+252", flag: "🇸🇴" },
+  { name: "أخرى",                     code: "+",    flag: "🌍" },
+];
+
 export default function RegistrationModal({ isOpen, onClose, researchTitle, researchId = 0 }: RegistrationModalProps) {
+  const { toast } = useToast();
+
   const [form, setForm] = useState({
     fullName: "",
     specialization: "",
     email: "",
-    whatsapp: "",
+    whatsappLocal: "",
     affiliation: "",
     country: "المملكة العربية السعودية",
     city: "",
@@ -25,14 +51,22 @@ export default function RegistrationModal({ isOpen, onClose, researchTitle, rese
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
+  const selectedCountry = COUNTRIES.find((c) => c.name === form.country) ?? COUNTRIES[0];
+
+  const fullWhatsapp = `${selectedCountry.code}${form.whatsappLocal.replace(/^0+/, "")}`;
+
   const reset = () => {
-    setForm({ fullName: "", specialization: "", email: "", whatsapp: "", affiliation: "", country: "المملكة العربية السعودية", city: "", orcid: "" });
+    setForm({ fullName: "", specialization: "", email: "", whatsappLocal: "", affiliation: "", country: "المملكة العربية السعودية", city: "", orcid: "" });
     setDone(false);
     setError("");
     setLoading(false);
   };
 
   const handleClose = () => { reset(); onClose(); };
+
+  const handleCountryChange = (countryName: string) => {
+    setForm((f) => ({ ...f, country: countryName }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +78,14 @@ export default function RegistrationModal({ isOpen, onClose, researchTitle, rese
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
+          fullName: form.fullName,
+          specialization: form.specialization,
+          email: form.email,
+          whatsapp: fullWhatsapp,
+          affiliation: form.affiliation,
+          country: form.country,
+          city: form.city,
+          orcid: form.orcid,
           researchId,
           researchTitle,
         }),
@@ -57,11 +98,15 @@ export default function RegistrationModal({ isOpen, onClose, researchTitle, rese
 
       setDone(true);
 
-      // Open WhatsApp with pre-filled message
+      toast({
+        title: "✅ تم استلام طلبك بنجاح!",
+        description: "سيتواصل معك فريق RSPF قريباً عبر البريد أو الواتساب.",
+      });
+
       const waMessage = encodeURIComponent(
         `مرحباً، أنا ${form.fullName} — ${form.specialization}\n` +
         `أودّ التسجيل في الفرصة البحثية:\n${researchTitle}\n\n` +
-        `📧 ${form.email}\n📱 ${form.whatsapp}\n🏥 ${form.affiliation}`
+        `📧 ${form.email}\n📱 ${fullWhatsapp}\n🏥 ${form.affiliation}`
       );
       setTimeout(() => {
         window.open(`https://wa.me/966578032336?text=${waMessage}`, "_blank");
@@ -69,6 +114,11 @@ export default function RegistrationModal({ isOpen, onClose, researchTitle, rese
 
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
+      toast({
+        title: "⚠️ حدث خطأ",
+        description: err instanceof Error ? err.message : "حدث خطأ غير متوقع",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -148,27 +198,7 @@ export default function RegistrationModal({ isOpen, onClose, researchTitle, rese
               </div>
             ))}
 
-            {/* WhatsApp */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1 text-right">
-                رقم واتساب — WhatsApp <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2">
-                <input
-                  data-testid="input-whatsapp"
-                  type="tel"
-                  required
-                  placeholder="578032336"
-                  value={form.whatsapp}
-                  onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-                  className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-right text-sm focus:outline-none focus:ring-2 focus:ring-[#0C3156]/25 focus:border-[#0C3156]"
-                />
-                <span className="flex items-center px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 flex-shrink-0">
-                  🇸🇦 +966
-                </span>
-              </div>
-            </div>
-
+            {/* Country + City */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1 text-right">المدينة</label>
@@ -182,22 +212,43 @@ export default function RegistrationModal({ isOpen, onClose, researchTitle, rese
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1 text-right">الدولة</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1 text-right">الدولة <span className="text-red-500">*</span></label>
                 <select
                   data-testid="select-country"
                   value={form.country}
-                  onChange={(e) => setForm({ ...form, country: e.target.value })}
+                  onChange={(e) => handleCountryChange(e.target.value)}
                   className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-right text-sm focus:outline-none focus:ring-2 focus:ring-[#0C3156]/25 focus:border-[#0C3156] bg-white"
                 >
-                  <option>المملكة العربية السعودية</option>
-                  <option>البحرين</option>
-                  <option>قطر</option>
-                  <option>عُمان</option>
-                  <option>الكويت</option>
-                  <option>الإمارات</option>
-                  <option>أخرى</option>
+                  {COUNTRIES.map((c) => (
+                    <option key={c.name} value={c.name}>{c.flag} {c.name}</option>
+                  ))}
                 </select>
               </div>
+            </div>
+
+            {/* WhatsApp with dynamic country code */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1 text-right">
+                رقم واتساب — WhatsApp <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-2" dir="ltr">
+                <input
+                  data-testid="input-whatsapp"
+                  type="tel"
+                  required
+                  placeholder="5xxxxxxxx"
+                  value={form.whatsappLocal}
+                  onChange={(e) => setForm({ ...form, whatsappLocal: e.target.value })}
+                  className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-left text-sm focus:outline-none focus:ring-2 focus:ring-[#0C3156]/25 focus:border-[#0C3156]"
+                />
+                <span className="flex items-center gap-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 flex-shrink-0 whitespace-nowrap">
+                  <span>{selectedCountry.flag}</span>
+                  <span>{selectedCountry.code}</span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 text-right">
+                الرقم الكامل: <span dir="ltr" className="font-mono">{fullWhatsapp}{form.whatsappLocal ? "" : "xxxxxxxx"}</span>
+              </p>
             </div>
 
             <div>
