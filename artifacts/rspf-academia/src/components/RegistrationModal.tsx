@@ -97,51 +97,68 @@ export default function RegistrationModal({ isOpen, onClose, researchTitle, rese
 
   const handleClose = () => { reset(); onClose(); };
 
+  const saveToLocalStorage = (data: Record<string, unknown>) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem("rspf_registrations") || "[]");
+      existing.push({ ...data, id: Date.now(), createdAt: new Date().toISOString() });
+      localStorage.setItem("rspf_registrations", JSON.stringify(existing));
+    } catch {}
+  };
+
+  const sendWhatsAppNotification = (data: typeof form) => {
+    const msg = encodeURIComponent(
+      `📋 تسجيل جديد في RSPF\n\n` +
+      `👤 الاسم: ${data.fullName}\n` +
+      `🎓 التخصص: ${data.specialization}\n` +
+      `📚 الدرجة العلمية: ${data.academicDegree}\n` +
+      `📧 البريد: ${data.email}\n` +
+      `📱 واتساب: ${fullWhatsapp}\n` +
+      `🏥 الجهة: ${data.affiliation}\n` +
+      `🌍 الدولة: ${data.country}${data.city ? ` — ${data.city}` : ""}\n` +
+      `${data.orcid ? `🔗 ORCID: ${data.orcid}\n` : ""}` +
+      `\n📄 الدراسة: ${researchTitle}`
+    );
+    window.open(`https://wa.me/966578032336?text=${msg}`, "_blank");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    try {
-      const res = await fetch(`${API_BASE}/registrations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: form.fullName,
-          specialization: form.specialization,
-          academicDegree: form.academicDegree,
-          email: form.email,
-          whatsapp: fullWhatsapp,
-          affiliation: form.affiliation,
-          country: form.country,
-          city: form.city,
-          orcid: form.orcid,
-          researchId,
-          researchTitle,
-        }),
-      });
+    const payload = {
+      fullName: form.fullName,
+      specialization: form.specialization,
+      academicDegree: form.academicDegree,
+      email: form.email,
+      whatsapp: fullWhatsapp,
+      affiliation: form.affiliation,
+      country: form.country,
+      city: form.city,
+      orcid: form.orcid,
+      researchId,
+      researchTitle,
+    };
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error((body as { error?: string }).error || t.registration.error);
-      }
+    // Always save to localStorage
+    saveToLocalStorage(payload);
 
-      setDone(true);
-      toast({
-        title: "✅ " + t.registration.success,
-        description: t.registration.successDesc,
-      });
+    // Try API (non-blocking)
+    fetch(`${API_BASE}/registrations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
 
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t.registration.error);
-      toast({
-        title: "⚠️ خطأ",
-        description: err instanceof Error ? err.message : t.registration.error,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    // Send WhatsApp notification to admin
+    sendWhatsAppNotification(form);
+
+    setDone(true);
+    setLoading(false);
+    toast({
+      title: "✅ " + t.registration.success,
+      description: t.registration.successDesc,
+    });
   };
 
   if (!isOpen) return null;

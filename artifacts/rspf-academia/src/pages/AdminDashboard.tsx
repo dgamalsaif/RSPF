@@ -537,6 +537,215 @@ const STATUS_MAP = {
   draft:  { label: "مسودة",  className: "bg-gray-50 text-gray-600 border border-gray-200",          dot: "bg-gray-400" },
 };
 
+/* ============================================================
+   REGISTRATIONS PANEL
+   ============================================================ */
+interface Registration {
+  id: number;
+  fullName: string;
+  specialization: string;
+  academicDegree: string;
+  email: string;
+  whatsapp: string;
+  affiliation: string;
+  country: string;
+  city: string;
+  orcid: string;
+  researchId: number;
+  researchTitle: string;
+  createdAt: string;
+}
+
+function RegistrationsPanel() {
+  const [regs, setRegs] = useState<Registration[]>([]);
+  const [regSearch, setRegSearch] = useState("");
+  const [selected, setSelected] = useState<Registration | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const load = () => {
+      try {
+        const local: Registration[] = JSON.parse(localStorage.getItem("rspf_registrations") || "[]");
+        // Deduplicate by email+researchId
+        const seen = new Set<string>();
+        const unique = local.filter((r) => {
+          const key = `${r.email}-${r.researchId}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setRegs(unique.reverse());
+      } catch { setRegs([]); }
+    };
+    load();
+    const iv = setInterval(load, 5000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const filtered = regs.filter((r) =>
+    !regSearch ||
+    r.fullName.toLowerCase().includes(regSearch.toLowerCase()) ||
+    r.email.toLowerCase().includes(regSearch.toLowerCase()) ||
+    r.specialization.toLowerCase().includes(regSearch.toLowerCase()) ||
+    r.researchTitle.toLowerCase().includes(regSearch.toLowerCase())
+  );
+
+  const handleDelete = (id: number) => {
+    const updated = regs.filter((r) => r.id !== id);
+    setRegs(updated);
+    localStorage.setItem("rspf_registrations", JSON.stringify(updated));
+    setSelected(null);
+    toast({ title: "🗑️ تم الحذف", variant: "destructive" });
+  };
+
+  const handleWhatsApp = (reg: Registration) => {
+    const msg = encodeURIComponent(`السلام عليكم ${reg.fullName}، شكراً لتسجيلك في دراسة "${reg.researchTitle}" عبر منصة RSPF. سيتواصل معك المشرف قريباً.`);
+    window.open(`https://wa.me/${reg.whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
+  };
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2 text-sm font-bold text-emerald-700">
+            {regs.length} مسجّل
+          </div>
+          <div className="relative">
+            <Search size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="بحث بالاسم أو البريد أو الدراسة..."
+              value={regSearch}
+              onChange={(e) => setRegSearch(e.target.value)}
+              className="border border-slate-200 rounded-xl pr-9 pl-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0C3156]/20 w-72"
+              dir="rtl"
+            />
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            const data = regs.map((r) => `${r.fullName}\t${r.email}\t${r.whatsapp}\t${r.specialization}\t${r.affiliation}\t${r.country}\t${r.researchTitle}`).join("\n");
+            const csv = "الاسم\tالبريد\tواتساب\tالتخصص\tالجهة\tالدولة\tالدراسة\n" + data;
+            const blob = new Blob([csv], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url; a.download = "registrations.tsv"; a.click();
+          }}
+          className="flex items-center gap-2 border border-slate-200 text-slate-600 font-semibold px-4 py-2.5 rounded-xl hover:bg-slate-50 text-sm transition-colors"
+        >
+          <Copy size={15} /> تصدير البيانات
+        </button>
+      </div>
+
+      {/* Table */}
+      {filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 py-20 text-center text-slate-400">
+          <UserCheck size={44} className="mx-auto mb-4 opacity-20" />
+          <p className="font-bold text-lg">لا توجد تسجيلات بعد</p>
+          <p className="text-sm mt-1">ستظهر هنا بيانات المشاركين فور تسجيلهم في الفرص البحثية</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  {["الاسم", "التخصص / الجهة", "البريد / واتساب", "الدراسة", "تاريخ التسجيل", "إجراءات"].map((h) => (
+                    <th key={h} className="px-4 py-3 text-xs font-bold text-slate-500 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filtered.map((reg) => (
+                  <tr key={reg.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="font-bold text-slate-800">{reg.fullName}</div>
+                      <div className="text-xs text-slate-400">{reg.academicDegree}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-slate-700 font-medium">{reg.specialization}</div>
+                      <div className="text-xs text-slate-400">{reg.affiliation}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-slate-700 text-xs" dir="ltr">{reg.email}</div>
+                      <div className="text-xs text-slate-400 font-mono" dir="ltr">{reg.whatsapp}</div>
+                    </td>
+                    <td className="px-4 py-3 max-w-xs">
+                      <p className="text-xs text-slate-600 line-clamp-2">{reg.researchTitle}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-slate-400">{new Date(reg.createdAt).toLocaleDateString("ar-SA")}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <button onClick={() => handleWhatsApp(reg)} title="واتساب"
+                          className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-colors">
+                          <CheckCircle2 size={15} />
+                        </button>
+                        <button onClick={() => setSelected(reg)} title="عرض"
+                          className="p-2 text-[#0C3156] hover:bg-[#0C3156]/5 rounded-xl transition-colors">
+                          <Eye size={15} />
+                        </button>
+                        <button onClick={() => handleDelete(reg.id)} title="حذف"
+                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {selected && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={() => setSelected(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+              <h3 className="font-black text-slate-900 text-lg">{selected.fullName}</h3>
+            </div>
+            <div className="space-y-3 text-right">
+              {[
+                ["التخصص", selected.specialization],
+                ["الدرجة العلمية", selected.academicDegree],
+                ["البريد الإلكتروني", selected.email],
+                ["واتساب", selected.whatsapp],
+                ["الجهة / المستشفى", selected.affiliation],
+                ["الدولة / المدينة", `${selected.country}${selected.city ? " — " + selected.city : ""}`],
+                ["ORCID", selected.orcid || "—"],
+                ["الدراسة المسجّل فيها", selected.researchTitle],
+                ["تاريخ التسجيل", new Date(selected.createdAt).toLocaleString("ar-SA")],
+              ].map(([label, value]) => (
+                <div key={label} className="flex flex-col gap-0.5">
+                  <span className="text-xs text-slate-400 font-semibold">{label}</span>
+                  <span className="text-sm text-slate-800 font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setSelected(null)}
+                className="flex-1 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl hover:bg-slate-50 text-sm">
+                إغلاق
+              </button>
+              <button onClick={() => handleWhatsApp(selected)}
+                className="flex-1 bg-[#25D366] text-white font-bold py-2.5 rounded-xl hover:opacity-90 text-sm flex items-center justify-center gap-2">
+                <CheckCircle2 size={16} /> تواصل عبر واتساب
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const ADMIN_PASSWORD = "RSPF@2026";
 const ADMIN_SESSION_KEY = "rspf_admin_session";
 
@@ -602,7 +811,7 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
 
 export default function AdminDashboard() {
   const [authenticated, setAuthenticated] = useState(() => !!sessionStorage.getItem(ADMIN_SESSION_KEY));
-  const [mainTab, setMainTab] = useState<"research" | "coordinators">("research");
+  const [mainTab, setMainTab] = useState<"research" | "coordinators" | "registrations">("research");
   const [research, setResearch] = useState<ResearchOpportunity[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ResearchOpportunity["status"]>("all");
@@ -710,10 +919,14 @@ export default function AdminDashboard() {
         </div>
 
         {/* MAIN TABS */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 flex-wrap">
           <button onClick={() => setMainTab("research")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${mainTab === "research" ? "bg-[#0C3156] text-white shadow-md" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
             <BookOpen size={16} /> الفرص البحثية
+          </button>
+          <button onClick={() => setMainTab("registrations")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${mainTab === "registrations" ? "bg-[#0C3156] text-white shadow-md" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+            <UserCheck size={16} /> التسجيلات
           </button>
           <button onClick={() => setMainTab("coordinators")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all relative ${mainTab === "coordinators" ? "bg-[#0C3156] text-white shadow-md" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
@@ -728,6 +941,9 @@ export default function AdminDashboard() {
 
         {/* COORDINATORS PANEL */}
         {mainTab === "coordinators" && <CoordinatorsPanel />}
+
+        {/* REGISTRATIONS PANEL */}
+        {mainTab === "registrations" && <RegistrationsPanel />}
 
         {/* RESEARCH SECTION */}
         {mainTab === "research" && <div className="contents">
