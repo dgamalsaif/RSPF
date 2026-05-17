@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, Eye, EyeOff, Copy, CheckCircle2, X, ChevronDown, ChevronUp, Users, Link as LinkIcon, UserPlus, LogIn, Star, Award } from "lucide-react";
+import { Shield, Eye, EyeOff, Copy, CheckCircle2, X, ChevronDown, ChevronUp, Users, Link as LinkIcon, UserPlus, LogIn, Star, Award, KeyRound } from "lucide-react";
 import RegistrationModal from "@/components/RegistrationModal";
 import { getResearchOpportunities, ResearchOpportunity } from "@/lib/researchData";
 import { useToast } from "@/hooks/use-toast";
@@ -367,6 +367,8 @@ export default function CoordinatorPortal() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", institution: "" });
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [codeCopied, setCodeCopied] = useState(false);
   const { toast } = useToast();
 
   // Persist session
@@ -396,28 +398,41 @@ export default function CoordinatorPortal() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // Generate code immediately
+    const generatedCode = `COORD-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
     const newRequest: CoordinatorRequest = {
       id: `req-${Date.now()}`,
       ...form,
-      status: "pending",
+      status: "approved",
+      code: generatedCode,
       createdAt: new Date().toISOString().split("T")[0],
     };
+
+    // Save to both requests and approved codes
     const requests = getCoordinatorRequests();
     requests.push(newRequest);
     saveCoordinatorRequests(requests);
 
-    // Send WhatsApp notification to admin
+    const codes = getApprovedCodes();
+    codes.push(newRequest);
+    saveApprovedCodes(codes);
+
+    // Send WhatsApp to admin with the code already included
     const msg = encodeURIComponent(
-      `🆕 طلب منسق جديد على RSPF\n\n` +
+      `🆕 تسجيل منسق جديد — RSPF\n\n` +
       `👤 الاسم: ${form.name}\n` +
       `📧 البريد: ${form.email}\n` +
       `📱 الجوال: ${form.phone}\n` +
       `🏥 الجهة: ${form.institution}\n\n` +
-      `يرجى الموافقة وإرسال رمز الوصول`
+      `🔑 رمز الدخول: *${generatedCode}*\n\n` +
+      `للموافقة: أرسل "تمت الموافقة على ${form.name}" أو احتفظ بهذه الرسالة للمراجعة.`
     );
     window.open(`https://wa.me/966578032336?text=${msg}`, "_blank");
 
     setLoading(false);
+    setGeneratedCode(generatedCode);
     setView("pending");
   };
 
@@ -453,42 +468,56 @@ export default function CoordinatorPortal() {
             <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 size={32} className="text-emerald-500" />
             </div>
-            <h2 className="text-xl font-black text-slate-900 mb-2">تم إرسال طلبك ✅</h2>
-            <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-              تم إشعار الإدارة عبر واتساب ببياناتك. ستتلقى رمز الوصول الخاص بك على واتساب بعد الموافقة.
+            <h2 className="text-xl font-black text-slate-900 mb-1">تم التسجيل بنجاح! ✅</h2>
+            <p className="text-slate-500 text-sm mb-5 leading-relaxed">
+              رمز دخولك جاهز الآن — احفظه واستخدمه لتسجيل الدخول
             </p>
 
-            {/* Steps */}
-            <div className="bg-slate-50 rounded-2xl p-5 mb-6 text-right space-y-4 border border-slate-100">
-              <p className="text-xs font-black text-slate-500 text-center uppercase tracking-widest mb-3">خطوات الحصول على رمز الدخول</p>
-              {[
-                { num: "١", text: "تواصلت الإدارة معك وأرسلت طلبك ✅", done: true },
-                { num: "٢", text: "الإدارة ستراجع طلبك وتوافق عليه خلال 24 ساعة", done: false },
-                { num: "٣", text: "ستصلك رسالة واتساب تحتوي على رمز الدخول الخاص بك", done: false },
-                { num: "٤", text: "ادخل الرمز في خانة 'رمز الدخول' أدناه وادخل للوحة التحكم", done: false },
-              ].map((step) => (
-                <div key={step.num} className="flex items-center gap-3 flex-row-reverse">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${step.done ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"}`}>
-                    {step.done ? "✓" : step.num}
-                  </div>
-                  <span className={`text-sm ${step.done ? "text-emerald-700 font-semibold" : "text-slate-600"}`}>{step.text}</span>
-                </div>
-              ))}
+            {/* CODE BOX */}
+            <div className="bg-gradient-to-br from-[#0C3156] to-[#1A5FAE] rounded-2xl p-5 mb-5">
+              <p className="text-blue-200 text-xs mb-2 font-semibold">🔑 رمز الدخول الخاص بك</p>
+              <div className="bg-white/10 border border-white/20 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedCode);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2500);
+                  }}
+                  className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                >
+                  {codeCopied ? <CheckCircle2 size={18} className="text-emerald-400" /> : <Copy size={18} />}
+                </button>
+                <span className="text-white font-mono text-xl font-black tracking-widest select-all flex-1 text-center">
+                  {generatedCode}
+                </span>
+                <KeyRound size={18} className="text-[#E9A020] flex-shrink-0" />
+              </div>
+              {codeCopied && <p className="text-emerald-300 text-xs mt-2">✓ تم نسخ الرمز</p>}
+              <p className="text-blue-200/70 text-xs mt-3">احتفظ بهذا الرمز — ستحتاجه لتسجيل الدخول لاحقاً</p>
             </div>
+
+            {/* Info */}
+            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-5 text-right">
+              <p className="text-amber-800 text-xs leading-relaxed">
+                📨 تم إرسال هذا الرمز مع بياناتك إلى إدارة RSPF عبر واتساب. يمكنك البدء باستخدام رمز الدخول مباشرة.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { setCode(generatedCode); setView("login"); }}
+              className="w-full bg-gradient-to-r from-[#0C3156] to-[#1A5FAE] text-white font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-sm shadow-md flex items-center justify-center gap-2 mb-3"
+            >
+              <LogIn size={16} /> الدخول إلى لوحة التحكم الآن
+            </button>
 
             <a
               href="https://wa.me/966578032336"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity mb-3 text-sm"
+              className="w-full flex items-center justify-center gap-2 border border-[#25D366]/40 text-[#25D366] font-semibold py-2.5 rounded-xl hover:bg-[#25D366]/5 transition-colors text-sm"
             >
               <span>📱</span> تواصل مع الإدارة عبر واتساب
             </a>
-
-            <button onClick={() => setView("login")}
-              className="w-full border border-[#0C3156]/20 text-[#0C3156] font-semibold py-3 rounded-xl hover:bg-[#0C3156]/5 transition-colors text-sm">
-              لديّ رمز وصول — سجّل الدخول الآن
-            </button>
           </div>
         )}
 
