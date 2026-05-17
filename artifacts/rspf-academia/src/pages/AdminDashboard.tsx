@@ -3,7 +3,8 @@ import { Link } from "wouter";
 import {
   Plus, Pencil, Trash2, Eye, X, ChevronLeft, LogOut, Search,
   Users, BookOpen, TrendingUp, AlertCircle, Image as ImageIcon,
-  Globe, CheckCircle2, Copy, UserCheck, Clock, ShieldCheck, Upload
+  Globe, CheckCircle2, Copy, UserCheck, Clock, ShieldCheck, Upload,
+  EyeOff, LogIn
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getResearchOpportunities, saveResearchOpportunities, getNextId, ResearchOpportunity, SPECIALTY_COLORS } from "@/lib/researchData";
@@ -536,7 +537,71 @@ const STATUS_MAP = {
   draft:  { label: "مسودة",  className: "bg-gray-50 text-gray-600 border border-gray-200",          dot: "bg-gray-400" },
 };
 
+const ADMIN_PASSWORD = "RSPF@2026";
+const ADMIN_SESSION_KEY = "rspf_admin_session";
+
+function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
+  const [pw, setPw] = useState("");
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      if (pw === ADMIN_PASSWORD) {
+        sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+        onSuccess();
+      } else {
+        setError("كلمة المرور غير صحيحة");
+      }
+      setLoading(false);
+    }, 500);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0C3156] to-[#0a2040] flex items-center justify-center px-4">
+      <div className="w-full max-w-sm animate-scale-in">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
+            <ShieldCheck size={32} className="text-[#E9A020]" />
+          </div>
+          <h1 className="text-2xl font-black text-white">لوحة تحكم RSPF</h1>
+          <p className="text-blue-300 text-sm mt-1">أدخل كلمة مرور الإدارة للدخول</p>
+        </div>
+        <div className="bg-white/8 backdrop-blur-md border border-white/15 rounded-2xl p-7">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="relative">
+              <input
+                type={show ? "text" : "password"}
+                value={pw}
+                onChange={(e) => { setPw(e.target.value); setError(""); }}
+                placeholder="كلمة المرور"
+                className={`w-full bg-white/10 border rounded-xl px-4 py-3 text-white placeholder-white/40 text-right text-sm focus:outline-none focus:ring-2 font-mono ${error ? "border-red-400 focus:ring-red-400/30" : "border-white/20 focus:ring-[#E9A020]/40 focus:border-[#E9A020]/60"}`}
+              />
+              <button type="button" onClick={() => setShow(!show)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors">
+                {show ? <EyeOff size={17} /> : <Eye size={17} />}
+              </button>
+            </div>
+            {error && (
+              <p className="text-red-400 text-xs text-right bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">{error}</p>
+            )}
+            <button type="submit" disabled={loading}
+              className="w-full bg-[#E9A020] text-white font-bold py-3 rounded-xl hover:bg-[#d08e10] transition-colors text-sm shadow-lg disabled:opacity-60 flex items-center justify-center gap-2">
+              {loading ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> جاري التحقق...</> : <><LogIn size={16} /> دخول إلى لوحة التحكم</>}
+            </button>
+          </form>
+        </div>
+        <p className="text-center text-white/30 text-xs mt-5">هذه الصفحة مخصصة لإدارة المنصة فقط</p>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
+  const [authenticated, setAuthenticated] = useState(() => !!sessionStorage.getItem(ADMIN_SESSION_KEY));
   const [mainTab, setMainTab] = useState<"research" | "coordinators">("research");
   const [research, setResearch] = useState<ResearchOpportunity[]>([]);
   const [search, setSearch] = useState("");
@@ -546,6 +611,10 @@ export default function AdminDashboard() {
   const [deleteItem, setDeleteItem] = useState<ResearchOpportunity | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [pendingCount, setPendingCount] = useState(0);
+
+  if (!authenticated) {
+    return <AdminLogin onSuccess={() => setAuthenticated(true)} />;
+  }
 
   useEffect(() => {
     setResearch(getResearchOpportunities());

@@ -112,7 +112,14 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between flex-wrap gap-2">
           <p className="text-blue-300 text-xs">© RSPF 2026. جميع الحقوق محفوظة.</p>
-          <p className="text-blue-300 text-xs">Research Scientific Publications Forum</p>
+          <div className="flex items-center gap-4">
+            <p className="text-blue-300 text-xs">Research Scientific Publications Forum</p>
+            <Link href="/admin"
+              className="text-white/15 hover:text-white/40 text-xs transition-colors select-none"
+              title="Admin">
+              ⚙
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

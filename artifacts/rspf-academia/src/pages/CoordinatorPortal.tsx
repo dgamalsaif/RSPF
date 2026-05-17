@@ -449,17 +449,45 @@ export default function CoordinatorPortal() {
 
         {/* PENDING VIEW */}
         {view === "pending" && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 text-center">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 text-center animate-scale-in">
             <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 size={32} className="text-emerald-500" />
             </div>
             <h2 className="text-xl font-black text-slate-900 mb-2">تم إرسال طلبك ✅</h2>
             <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-              تم إرسال طلبك للإدارة عبر واتساب. بعد الموافقة ستحصل على رمز وصول خاص بك. عادةً يستغرق ذلك من 24 إلى 48 ساعة.
+              تم إشعار الإدارة عبر واتساب ببياناتك. ستتلقى رمز الوصول الخاص بك على واتساب بعد الموافقة.
             </p>
+
+            {/* Steps */}
+            <div className="bg-slate-50 rounded-2xl p-5 mb-6 text-right space-y-4 border border-slate-100">
+              <p className="text-xs font-black text-slate-500 text-center uppercase tracking-widest mb-3">خطوات الحصول على رمز الدخول</p>
+              {[
+                { num: "١", text: "تواصلت الإدارة معك وأرسلت طلبك ✅", done: true },
+                { num: "٢", text: "الإدارة ستراجع طلبك وتوافق عليه خلال 24 ساعة", done: false },
+                { num: "٣", text: "ستصلك رسالة واتساب تحتوي على رمز الدخول الخاص بك", done: false },
+                { num: "٤", text: "ادخل الرمز في خانة 'رمز الدخول' أدناه وادخل للوحة التحكم", done: false },
+              ].map((step) => (
+                <div key={step.num} className="flex items-center gap-3 flex-row-reverse">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${step.done ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"}`}>
+                    {step.done ? "✓" : step.num}
+                  </div>
+                  <span className={`text-sm ${step.done ? "text-emerald-700 font-semibold" : "text-slate-600"}`}>{step.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="https://wa.me/966578032336"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity mb-3 text-sm"
+            >
+              <span>📱</span> تواصل مع الإدارة عبر واتساب
+            </a>
+
             <button onClick={() => setView("login")}
-              className="w-full bg-[#0C3156] text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity">
-              لديّ رمز وصول — تسجيل الدخول
+              className="w-full border border-[#0C3156]/20 text-[#0C3156] font-semibold py-3 rounded-xl hover:bg-[#0C3156]/5 transition-colors text-sm">
+              لديّ رمز وصول — سجّل الدخول الآن
             </button>
           </div>
         )}
