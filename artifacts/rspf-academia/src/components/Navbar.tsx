@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Microscope, ChevronDown } from "lucide-react";
+import { Menu, X, Microscope } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "الرئيسية" },

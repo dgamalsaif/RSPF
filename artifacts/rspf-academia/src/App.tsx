@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -22,11 +22,27 @@ const queryClient = new QueryClient();
 
 function Router() {
   const [location] = useLocation();
+  const [coordinatorLoggedIn, setCoordinatorLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      const session = sessionStorage.getItem("rspf_coordinator_session");
+      setCoordinatorLoggedIn(!!session);
+    };
+    check();
+    // Poll every second to detect login/logout
+    const interval = setInterval(check, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const isAdmin = location === "/admin" || location === "/admin/submissions";
+  const isCoordinatorDashboard = location === "/coordinator-portal" && coordinatorLoggedIn;
+
+  const hideShell = isAdmin || isCoordinatorDashboard;
 
   return (
     <div className="flex flex-col min-h-screen" style={{ fontFamily: "'Tajawal', sans-serif" }}>
-      {!isAdmin && <Navbar />}
+      {!hideShell && <Navbar />}
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
@@ -42,8 +58,8 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
-      {!isAdmin && <Footer />}
-      {!isAdmin && <FloatingButtons />}
+      {!hideShell && <Footer />}
+      {!hideShell && <FloatingButtons />}
     </div>
   );
 }

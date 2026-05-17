@@ -3,9 +3,181 @@ import { Link } from "wouter";
 import {
   Plus, Pencil, Trash2, Eye, X, ChevronLeft, LogOut, Search,
   Users, BookOpen, TrendingUp, AlertCircle, Image as ImageIcon,
-  LayoutDashboard, FileText, Settings, Globe, CheckCircle2
+  Globe, CheckCircle2, Copy, UserCheck, Clock, ShieldCheck
 } from "lucide-react";
 import { getResearchOpportunities, saveResearchOpportunities, getNextId, ResearchOpportunity, SPECIALTY_COLORS } from "@/lib/researchData";
+import {
+  getCoordinatorRequests, saveCoordinatorRequests,
+  getApprovedCodes, saveApprovedCodes,
+  type CoordinatorRequest
+} from "@/pages/CoordinatorPortal";
+
+function generateCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "COORD-";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function CoordinatorsPanel() {
+  const [requests, setRequests] = useState<CoordinatorRequest[]>([]);
+  const [approved, setApproved] = useState<CoordinatorRequest[]>([]);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [tab, setTab] = useState<"pending" | "approved">("pending");
+
+  const reload = () => {
+    setRequests(getCoordinatorRequests().filter((r) => r.status === "pending"));
+    setApproved(getApprovedCodes());
+  };
+
+  useEffect(() => { reload(); }, []);
+
+  const handleApprove = (req: CoordinatorRequest) => {
+    const code = generateCode();
+    const approvedItem: CoordinatorRequest = { ...req, status: "approved", code };
+    const newApproved = [...getApprovedCodes(), approvedItem];
+    saveApprovedCodes(newApproved);
+    const remaining = getCoordinatorRequests().filter((r) => r.id !== req.id);
+    saveCoordinatorRequests(remaining);
+    reload();
+    const msg = encodeURIComponent(
+      `✅ تمت الموافقة على طلبك كمنسق في RSPF\n\n` +
+      `👤 الاسم: ${req.name}\n` +
+      `🔑 رمز الدخول الخاص بك: ${code}\n\n` +
+      `ادخل على بوابة المنسق واستخدم هذا الرمز للدخول`
+    );
+    window.open(`https://wa.me/${req.phone.replace(/\D/g, "")}?text=${msg}`, "_blank");
+  };
+
+  const handleReject = (req: CoordinatorRequest) => {
+    const remaining = getCoordinatorRequests().filter((r) => r.id !== req.id);
+    saveCoordinatorRequests(remaining);
+    reload();
+  };
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-5 flex-row-reverse">
+        <div>
+          <h2 className="text-lg font-black text-slate-900 text-right">إدارة المنسقين</h2>
+          <p className="text-sm text-slate-400 text-right">الموافقة على طلبات المنسقين وتوليد رموز الوصول</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setTab("pending")}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${tab === "pending" ? "bg-amber-500 text-white" : "bg-amber-50 text-amber-700 hover:bg-amber-100"}`}>
+            <Clock size={14} />
+            بانتظار الموافقة
+            {requests.length > 0 && <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${tab === "pending" ? "bg-white/30 text-white" : "bg-amber-200"}`}>{requests.length}</span>}
+          </button>
+          <button onClick={() => setTab("approved")}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${tab === "approved" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`}>
+            <ShieldCheck size={14} />
+            موافق عليهم
+            {approved.length > 0 && <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${tab === "approved" ? "bg-white/30 text-white" : "bg-emerald-200"}`}>{approved.length}</span>}
+          </button>
+        </div>
+      </div>
+
+      {tab === "pending" && (
+        <>
+          {requests.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200 py-16 text-center">
+              <CheckCircle2 size={40} className="mx-auto mb-3 text-emerald-300" />
+              <p className="font-bold text-slate-500">لا توجد طلبات معلقة</p>
+              <p className="text-xs text-slate-400 mt-1">ستظهر هنا طلبات المنسقين الجدد</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {requests.map((req) => (
+                <div key={req.id} className="bg-white rounded-2xl border border-amber-200 shadow-sm p-5 text-right">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex gap-2">
+                      <button onClick={() => handleReject(req)}
+                        className="flex items-center gap-1.5 border border-red-200 text-red-500 hover:bg-red-50 font-semibold px-3.5 py-2 rounded-xl text-sm transition-colors">
+                        <X size={14} /> رفض
+                      </button>
+                      <button onClick={() => handleApprove(req)}
+                        className="flex items-center gap-1.5 bg-emerald-500 text-white hover:bg-emerald-600 font-bold px-4 py-2 rounded-xl text-sm transition-colors shadow-sm">
+                        <UserCheck size={14} /> موافقة + إرسال الرمز
+                      </button>
+                    </div>
+                    <div>
+                      <h3 className="font-black text-slate-900">{req.name}</h3>
+                      <p className="text-sm text-slate-500">{req.institution}</p>
+                      <div className="flex gap-4 mt-2 text-xs text-slate-400">
+                        <span>📧 {req.email}</span>
+                        <span>📱 {req.phone}</span>
+                        <span>📅 {req.createdAt}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {tab === "approved" && (
+        <>
+          {approved.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200 py-16 text-center">
+              <Users size={40} className="mx-auto mb-3 text-slate-200" />
+              <p className="font-bold text-slate-500">لا يوجد منسقون معتمدون بعد</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-right">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    {["الاسم", "الجهة", "رمز الوصول", "تاريخ التسجيل", "إجراء"].map((h) => (
+                      <th key={h} className="px-4 py-3 text-xs font-bold text-slate-500 uppercase">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {approved.map((c) => (
+                    <tr key={c.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-slate-800 text-sm">{c.name}</p>
+                        <p className="text-xs text-slate-400">{c.email}</p>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600">{c.institution}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 justify-end">
+                          <button onClick={() => copyCode(c.code!)}
+                            className="text-slate-400 hover:text-[#0C3156] transition-colors">
+                            {copiedCode === c.code ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                          </button>
+                          <span className="font-mono font-bold text-[#0C3156] bg-[#0C3156]/8 px-3 py-1 rounded-lg text-sm border border-[#0C3156]/15">
+                            {c.code}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-400">{c.createdAt}</td>
+                      <td className="px-4 py-3">
+                        <a href={`https://wa.me/${c.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"
+                          className="text-xs font-semibold text-[#25D366] hover:underline flex items-center gap-1">
+                          📱 تواصل
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 const EMPTY_FORM: Omit<ResearchOpportunity, "id" | "createdAt"> = {
   specialty: "",
@@ -302,6 +474,7 @@ const STATUS_MAP = {
 };
 
 export default function AdminDashboard() {
+  const [mainTab, setMainTab] = useState<"research" | "coordinators">("research");
   const [research, setResearch] = useState<ResearchOpportunity[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ResearchOpportunity["status"]>("all");
@@ -309,8 +482,16 @@ export default function AdminDashboard() {
   const [editItem, setEditItem] = useState<ResearchOpportunity | null>(null);
   const [deleteItem, setDeleteItem] = useState<ResearchOpportunity | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [pendingCount, setPendingCount] = useState(0);
 
-  useEffect(() => { setResearch(getResearchOpportunities()); }, []);
+  useEffect(() => {
+    setResearch(getResearchOpportunities());
+    setPendingCount(getCoordinatorRequests().filter((r) => r.status === "pending").length);
+    const interval = setInterval(() => {
+      setPendingCount(getCoordinatorRequests().filter((r) => r.status === "pending").length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const save = (data: typeof research) => { setResearch(data); saveResearchOpportunities(data); };
   const handleAdd = (form: FormData) => {
@@ -390,6 +571,29 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
+
+        {/* MAIN TABS */}
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => setMainTab("research")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${mainTab === "research" ? "bg-[#0C3156] text-white shadow-md" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+            <BookOpen size={16} /> الفرص البحثية
+          </button>
+          <button onClick={() => setMainTab("coordinators")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all relative ${mainTab === "coordinators" ? "bg-[#0C3156] text-white shadow-md" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+            <Users size={16} /> إدارة المنسقين
+            {pendingCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* COORDINATORS PANEL */}
+        {mainTab === "coordinators" && <CoordinatorsPanel />}
+
+        {/* RESEARCH SECTION */}
+        {mainTab === "research" && <div className="contents">
 
         {/* TOOLBAR */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-5">
@@ -615,6 +819,7 @@ export default function AdminDashboard() {
             )}
           </div>
         )}
+        </div>}
       </div>
 
       {/* MODALS */}
