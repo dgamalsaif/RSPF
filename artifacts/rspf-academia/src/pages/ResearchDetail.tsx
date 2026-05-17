@@ -208,7 +208,7 @@ export default function ResearchDetail() {
         )}
       </div>
 
-      <RegistrationModal isOpen={modalOpen} onClose={() => setModalOpen(false)} researchTitle={research.title} />
+      <RegistrationModal isOpen={modalOpen} onClose={() => setModalOpen(false)} researchTitle={research.title} researchId={research.id} />
     </div>
   );
 }

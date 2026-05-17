@@ -340,6 +340,12 @@ export default function AdminDashboard() {
               الموقع
             </Link>
             <span className="text-blue-400">|</span>
+            <Link href="/admin/submissions" data-testid="link-admin-submissions"
+              className="flex items-center gap-1.5 text-[#E9A020] hover:text-white text-sm font-semibold transition-colors">
+              <Users size={14} />
+              الطلبات والتسجيلات
+            </Link>
+            <span className="text-blue-400">|</span>
             <Link href="/coordinator-portal" data-testid="link-admin-logout"
               className="flex items-center gap-1.5 text-blue-200 hover:text-white text-sm transition-colors">
               <LogOut size={14} />
