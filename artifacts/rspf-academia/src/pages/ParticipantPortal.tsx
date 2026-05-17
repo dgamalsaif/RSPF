@@ -146,7 +146,7 @@ export default function ParticipantPortal() {
 
                     return (
                       <div key={opp.id}
-                        className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden group"
+                        className="animate-fade-in-up bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden group"
                         data-testid={`card-research-${opp.id}`}>
 
                         {/* Image */}

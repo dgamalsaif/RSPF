@@ -84,7 +84,7 @@ export default function ResearchDetail() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-7">
           {/* MAIN CONTENT */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-5 animate-fade-in-up">
 
             {/* Header (when no image) */}
             {!research.imageUrl && (
@@ -143,7 +143,7 @@ export default function ResearchDetail() {
           </div>
 
           {/* SIDEBAR */}
-          <div className="space-y-4">
+          <div className="space-y-4 animate-slide-in-right delay-200">
             <div className="bg-white border border-slate-200 rounded-2xl p-6 text-right shadow-md sticky top-20">
               <h3 className="text-base font-black text-slate-900 mb-4">📋 تفاصيل الفرصة</h3>
 

@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import {
   Plus, Pencil, Trash2, Eye, X, ChevronLeft, LogOut, Search,
   Users, BookOpen, TrendingUp, AlertCircle, Image as ImageIcon,
-  Globe, CheckCircle2, Copy, UserCheck, Clock, ShieldCheck
+  Globe, CheckCircle2, Copy, UserCheck, Clock, ShieldCheck, Upload
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { getResearchOpportunities, saveResearchOpportunities, getNextId, ResearchOpportunity, SPECIALTY_COLORS } from "@/lib/researchData";
 import {
   getCoordinatorRequests, saveCoordinatorRequests,
@@ -211,6 +212,28 @@ function ResearchFormModal({
     initial.benefits?.length ? [...initial.benefits] : ["", "", ""]
   );
   const [imgPreview, setImgPreview] = useState(initial.imageUrl || "");
+  const [imgTab, setImgTab] = useState<"url" | "upload">("upload");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("حجم الصورة يجب أن يكون أقل من 5MB");
+      return;
+    }
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const base64 = ev.target?.result as string;
+      setImgPreview(base64);
+      setForm((f) => ({ ...f, imageUrl: base64 }));
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,13 +245,13 @@ function ResearchFormModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-md" />
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto"
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto animate-slide-modal"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 rounded-t-2xl flex items-center justify-between z-10">
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
             <X size={20} />
           </button>
           <div className="text-right">
@@ -241,36 +264,76 @@ function ResearchFormModal({
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
 
-          {/* Image URL */}
+          {/* Image Upload */}
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2 text-right flex items-center gap-2 justify-end">
-              <ImageIcon size={15} className="text-slate-400" />
-              صورة الفرصة البحثية (رابط URL)
+            <label className="block text-sm font-bold text-slate-700 mb-2 text-right">
+              📸 صورة الفرصة البحثية
             </label>
-            <input
-              type="url"
-              value={imgPreview}
-              onChange={(e) => { setImgPreview(e.target.value); setForm({ ...form, imageUrl: e.target.value }); }}
-              placeholder="https://example.com/image.jpg"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0C3156]/20 focus:border-[#0C3156] font-mono"
-              dir="ltr"
-            />
+            {/* Tabs */}
+            <div className="flex gap-1 mb-3 bg-slate-100 p-1 rounded-xl w-fit mr-auto">
+              <button type="button" onClick={() => setImgTab("upload")}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${imgTab === "upload" ? "bg-white text-[#0C3156] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+                <Upload size={12} className="inline ml-1" /> رفع صورة
+              </button>
+              <button type="button" onClick={() => setImgTab("url")}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${imgTab === "url" ? "bg-white text-[#0C3156] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+                🔗 رابط URL
+              </button>
+            </div>
+
+            {imgTab === "upload" && (
+              <div>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                <button type="button" onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-[#0C3156]/25 hover:border-[#0C3156]/50 rounded-xl py-6 text-center transition-all hover:bg-[#0C3156]/3 group">
+                  {uploading ? (
+                    <div className="flex items-center justify-center gap-2 text-[#0C3156]">
+                      <div className="w-4 h-4 border-2 border-[#0C3156] border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm font-medium">جاري الرفع...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload size={24} className="text-[#0C3156]/40 mx-auto mb-2 group-hover:text-[#0C3156]/70 transition-colors" />
+                      <p className="text-sm font-semibold text-slate-500 group-hover:text-slate-700">اضغط لاختيار صورة</p>
+                      <p className="text-xs text-slate-400 mt-1">JPG، PNG، WebP — حتى 5MB</p>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {imgTab === "url" && (
+              <input
+                type="url"
+                value={imgPreview.startsWith("data:") ? "" : imgPreview}
+                onChange={(e) => { setImgPreview(e.target.value); setForm({ ...form, imageUrl: e.target.value }); }}
+                placeholder="https://example.com/image.jpg"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0C3156]/20 focus:border-[#0C3156] font-mono"
+                dir="ltr"
+              />
+            )}
+
             {imgPreview && (
-              <div className="mt-2 rounded-xl overflow-hidden border border-slate-200 h-36 bg-slate-50">
+              <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 h-40 bg-slate-50 relative group">
                 <img
                   src={imgPreview}
                   alt="preview"
                   className="w-full h-full object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
+                <button type="button"
+                  onClick={() => { setImgPreview(""); setForm((f) => ({ ...f, imageUrl: "" })); }}
+                  className="absolute top-2 left-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
+                  <X size={12} />
+                </button>
+                <div className="absolute bottom-2 right-2 bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full font-medium shadow-sm">
+                  ✓ صورة محددة
+                </div>
               </div>
             )}
             {!imgPreview && (
-              <div className="mt-2 rounded-xl border-2 border-dashed border-slate-200 h-24 flex items-center justify-center bg-slate-50">
-                <div className="text-center">
-                  <ImageIcon size={24} className="text-slate-300 mx-auto mb-1" />
-                  <p className="text-xs text-slate-400">أضف رابط الصورة لمعاينتها</p>
-                </div>
+              <div className="mt-2 rounded-xl border-2 border-dashed border-slate-100 h-16 flex items-center justify-center bg-slate-50">
+                <p className="text-xs text-slate-300 font-medium">لم يتم اختيار صورة بعد — ستُعرض بدونها</p>
               </div>
             )}
           </div>
@@ -493,21 +556,26 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  const { toast } = useToast();
   const save = (data: typeof research) => { setResearch(data); saveResearchOpportunities(data); };
   const handleAdd = (form: FormData) => {
     const now = new Date().toISOString().split("T")[0];
     save([...research, { ...form, id: getNextId(research), createdAt: now }]);
     setFormOpen(false);
+    toast({ title: "✅ تمت الإضافة بنجاح", description: `تم إضافة الفرصة البحثية: ${form.title.slice(0,50)}...` });
   };
   const handleEdit = (form: FormData) => {
     if (!editItem) return;
     save(research.map((r) => r.id === editItem.id ? { ...form, id: editItem.id, createdAt: editItem.createdAt } : r));
     setEditItem(null);
+    toast({ title: "💾 تم الحفظ بنجاح", description: "تم تحديث بيانات الفرصة البحثية" });
   };
   const handleDelete = () => {
     if (!deleteItem) return;
+    const title = deleteItem.title;
     save(research.filter((r) => r.id !== deleteItem.id));
     setDeleteItem(null);
+    toast({ title: "🗑️ تم الحذف", description: `تم حذف: ${title.slice(0,50)}`, variant: "destructive" });
   };
 
   const filtered = research.filter((r) => {

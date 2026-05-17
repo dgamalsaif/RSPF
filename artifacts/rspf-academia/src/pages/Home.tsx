@@ -33,39 +33,42 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/40 to-white py-20 px-4">
+        {/* Decorative background blobs */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(12,49,86,0.06)_0%,_transparent_60%)]" />
+        <div className="absolute top-16 left-10 w-32 h-32 bg-[#E9A020]/8 rounded-full blur-2xl animate-float-slow pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-48 h-48 bg-[#0C3156]/5 rounded-full blur-3xl animate-float pointer-events-none delay-300" />
         <div className="max-w-5xl mx-auto text-center relative">
-          <div className="inline-flex items-center gap-2 bg-[#0C3156]/8 border border-[#0C3156]/15 text-[#0C3156] px-5 py-2 rounded-full text-sm font-semibold mb-7 shadow-sm">
+          <div className="animate-fade-in-down inline-flex items-center gap-2 bg-[#0C3156]/8 border border-[#0C3156]/15 text-[#0C3156] px-5 py-2 rounded-full text-sm font-semibold mb-7 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-[#E9A020] animate-pulse" />
             Research Scientific Publications Forum · Edition 2026
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6 tracking-tight">
+          <h1 className="animate-fade-in-up delay-100 text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6 tracking-tight">
             <span className="text-slate-900">المنصة </span>
             <span className="text-[#E9A020]">الرائدة </span>
             <span className="text-slate-900">للبحث العلمي الطبي في </span>
             <br className="hidden sm:block"/>
             <span className="text-[#0C3156]">المملكة العربية السعودية</span>
           </h1>
-          <p className="text-slate-600 text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="animate-fade-in-up delay-200 text-slate-600 text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
             نقدم لك منصة بحثية متكاملة تجمع بين الخبرة الأكاديمية والدعم الشامل لمساعدتك في نشر أبحاثك في أرقى المجلات العلمية العالمية
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-14">
+          <div className="animate-fade-in-up delay-300 flex flex-col sm:flex-row gap-3 justify-center mb-14">
             <Link href="/participant-portal" data-testid="button-hero-explore"
-              className="bg-[#0C3156] text-white px-8 py-4 rounded-full font-bold text-base hover:bg-[#0a2847] transition-all shadow-lg shadow-[#0C3156]/25 inline-flex items-center gap-2 justify-center">
+              className="bg-[#0C3156] text-white px-8 py-4 rounded-full font-bold text-base hover:bg-[#0a2847] transition-all shadow-lg shadow-[#0C3156]/25 inline-flex items-center gap-2 justify-center hover:scale-105 active:scale-95">
               استكشف الفرص البحثية <ChevronLeft size={18} />
             </Link>
             <Link href="/about" data-testid="button-hero-about"
-              className="border-2 border-[#0C3156]/25 text-[#0C3156] bg-white px-8 py-4 rounded-full font-bold text-base hover:border-[#0C3156]/50 hover:bg-blue-50/50 transition-all inline-flex items-center gap-2 justify-center">
+              className="border-2 border-[#0C3156]/25 text-[#0C3156] bg-white px-8 py-4 rounded-full font-bold text-base hover:border-[#0C3156]/50 hover:bg-blue-50/50 transition-all inline-flex items-center gap-2 justify-center hover:scale-105 active:scale-95">
               تعرف علينا <ChevronLeft size={18} />
             </Link>
           </div>
           <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
             {[
-              { value: "SCFHS", label: "اعتماد رسمي", icon: "🏛️" },
-              { value: "500+", label: "باحث مسجل", icon: "👨‍⚕️" },
-              { value: "50+", label: "دراسة مكتملة", icon: "📄" },
+              { value: "SCFHS", label: "اعتماد رسمي", icon: "🏛️", delay: "delay-400" },
+              { value: "500+", label: "باحث مسجل", icon: "👨‍⚕️", delay: "delay-500" },
+              { value: "50+", label: "دراسة مكتملة", icon: "📄", delay: "delay-600" },
             ].map((stat) => (
-              <div key={stat.label} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+              <div key={stat.label} className={`animate-fade-in-up ${stat.delay} bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300`}>
                 <div className="text-2xl mb-1">{stat.icon}</div>
                 <div className="text-2xl font-black text-[#0C3156]">{stat.value}</div>
                 <div className="text-xs text-slate-500 mt-1 font-medium">{stat.label}</div>
@@ -86,8 +89,8 @@ export default function Home() {
             <p className="text-slate-500 max-w-xl mx-auto">خدمات بحثية متكاملة مصممة خصيصاً للأطباء والباحثين في المملكة العربية السعودية والخليج</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {services.map((svc) => (
-              <div key={svc.title} className="rounded-2xl p-6 text-white flex flex-col gap-4 hover:scale-[1.02] transition-transform" style={{ backgroundColor: svc.bg }} data-testid={`card-service-${svc.title.substring(0,8)}`}>
+            {services.map((svc, i) => (
+              <div key={svc.title} className={`animate-fade-in-up delay-${(i+1)*100} rounded-2xl p-6 text-white flex flex-col gap-4 hover:scale-[1.03] hover:-translate-y-1.5 transition-all duration-300 shadow-md hover:shadow-xl`} style={{ backgroundColor: svc.bg }} data-testid={`card-service-${svc.title.substring(0,8)}`}>
                 {svc.badge && (
                   <span className="inline-flex self-start bg-[#E9A020] text-white text-xs font-bold px-3 py-1 rounded-full">{svc.badge}</span>
                 )}
@@ -167,8 +170,8 @@ export default function Home() {
             <p className="text-slate-500 mt-2">نخصص دعمنا حسب هدفك البحثي والمهني</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {goals.map((goal) => (
-              <div key={goal.title} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow hover:border-[#0C3156]/25">
+            {goals.map((goal, i) => (
+              <div key={goal.title} className={`animate-fade-in-up delay-${(i+1)*100} bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-[#0C3156]/25 hover:-translate-y-1 duration-300`}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="bg-[#0C3156]/8 text-[#0C3156] text-xs font-bold px-2.5 py-1 rounded-full border border-[#0C3156]/10">{goal.badge}</span>
                   <span className="text-2xl">{goal.emoji}</span>
@@ -281,8 +284,8 @@ export default function Home() {
               { value: "50+", label: "الفرص البحثية", icon: "🔬" },
               { value: "95%", label: "نسبة النجاح", icon: "📊" },
               { value: "30+", label: "مجلة دولية محكمة", icon: "📚" },
-            ].map((stat) => (
-              <div key={stat.label} className="bg-gradient-to-br from-[#0C3156] to-[#1A5FAE] rounded-2xl p-5 text-center text-white shadow-md">
+            ].map((stat, i) => (
+              <div key={stat.label} className={`animate-fade-in-up delay-${(i+1)*150} bg-gradient-to-br from-[#0C3156] to-[#1A5FAE] rounded-2xl p-5 text-center text-white shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300`}>
                 <div className="text-2xl mb-2">{stat.icon}</div>
                 <div className="text-3xl font-black">{stat.value}</div>
                 <div className="text-sm text-blue-100 mt-2 font-medium">{stat.label}</div>
